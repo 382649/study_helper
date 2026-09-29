@@ -3,7 +3,7 @@ import anthropic
 from pypdf import PdfReader
 
 MODEL = "claude-sonnet-5-5"
-MAX_QUESTIONS = 30      # per visitor session, protects your API credits
+MAX_QUESTIONS = 30
 MAX_NOTES_CHARS = 60000
 
 st.set_page_config(page_title="Study Helper", page_icon="📚")
@@ -71,7 +71,7 @@ if prompt:
                 messages=st.session_state.history,
             )
             answer = r.content[0].text
-           except Exception as e:
-       answer = f"Error: {e}"
+        except Exception as e:
+            answer = f"Error: {e}"
         st.write(answer)
     st.session_state.history.append({"role": "assistant", "content": answer})
