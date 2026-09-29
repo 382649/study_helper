@@ -71,7 +71,7 @@ if prompt:
                 messages=st.session_state.history,
             )
             answer = r.content[0].text
-        except Exception:
-            answer = "Sorry, something went wrong. Please try again."
+           except Exception as e:
+       answer = f"Error: {e}"
         st.write(answer)
     st.session_state.history.append({"role": "assistant", "content": answer})
