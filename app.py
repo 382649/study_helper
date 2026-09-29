@@ -1,8 +1,9 @@
 import streamlit as st
-import anthropic
+from google import genai
+from google.genai import types
 from pypdf import PdfReader
 
-MODEL = "claude-sonnet-5-5"
+MODEL = "gemini-2.5-flash"
 MAX_QUESTIONS = 30
 MAX_NOTES_CHARS = 60000
 
@@ -10,7 +11,7 @@ st.set_page_config(page_title="Study Helper", page_icon="📚")
 st.title("📚 Study Helper")
 st.caption("Upload your notes, then ask questions or get quizzed.")
 
-client = anthropic.Anthropic(api_key=st.secrets["ANTHROPIC_API_KEY"])
+client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
 SYSTEM = """You are a friendly study helper.
 Answer ONLY using the student's notes below. If the answer is not in the notes, say so.
@@ -64,13 +65,22 @@ if prompt:
         st.write(prompt)
     with st.chat_message("assistant"):
         try:
-            r = client.messages.create(
+            contents = [
+                types.Content(
+                    role="user" if m["role"] == "user" else "model",
+                    parts=[types.Part(text=m["content"])],
+                )
+                for m in st.session_state.history
+            ]
+            r = client.models.generate_content(
                 model=MODEL,
-                max_tokens=1000,
-                system=SYSTEM.format(notes=notes),
-                messages=st.session_state.history,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM.format(notes=notes),
+                    max_output_tokens=2000,
+                ),
             )
-            answer = r.content[0].text
+            answer = r.text or "No answer was returned. Please try again."
         except Exception as e:
             answer = f"Error: {e}"
         st.write(answer)
